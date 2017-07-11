@@ -1,0 +1,473 @@
+---
+title: "Dates and times"
+output:
+  html_document:
+    toc: true
+    number_sections: true
+---
+
+
+<style type="text/css">
+
+body{ /* Normal  */
+      font-size: 12px;
+  }
+td {  /* Table  */
+  font-size: 8px;
+}
+h1.title {
+  font-size: 38px;
+  color: DarkRed;
+}
+h1 { /* Header 1 */
+  font-size: 28px;
+  color: DarkBlue;
+}
+h2 { /* Header 2 */
+    font-size: 22px;
+  color: DarkBlue;
+}
+h3 { /* Header 3 */
+  font-size: 18px;
+  font-family: "Times New Roman", Times, serif;
+  color: DarkBlue;
+}
+code.r{ /* Code block */
+    font-size: 12px;
+}
+pre { /* Code block - determines code spacing between lines */
+    font-size: 14px;
+}
+</style>
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Dates and times
+
+## Introduction（準備）
+
+
+準備としてパッケージを読み込む：
+
+```{r}
+library(tidyverse)
+
+library(lubridate)
+library(nycflights13)
+```
+
+
+## Creating date/times（日時データの作成）
+
+
+__日時データ（date/time data）の種類__  
+
+* 日付（Date）： Tibbleでは```<date>```と記載される．  
+* 時刻（Time within a day）： Tibbleでは```<time>```と記載される．    
+* 日付-時刻（Date-time）：Tibbleでは```<dttm>```と記載される．    
+
+
+* ```today()```：今日の日付を表示  
+* ```now()```：今の日付-時刻を表示  
+
+```{r}
+today()
+
+now()
+```
+
+他にdate/timeデータを作成する方法
+
+* 文字列  
+* 個別のdate-time構成成分  
+* 既存のdate/timeオブジェクト
+
+### From strings（文字列から）
+
+```{r}
+ymd("2017-01-31")
+mdy("January 31st, 2017")
+dmy("31-Jan-2017")
+```
+
+クォーテーションなしの数値も引数とできる：
+```{r}
+ymd(20170131)
+mdy(01312017)
+dmy(31012017)
+```
+
+
+* 日時データを作成する例：
+```{r}
+ymd_hms("2017-01-31 20:11:59")
+mdy_hm("01/31/2017 08:01")
+ymd(20170131, tz = "UTC")
+```
+
+
+### From individual components（個別のdate-time構成成分から）
+
+```{r}
+flights %>% 
+  select(year, month, day, hour, minute)
+```
+
+
+* make_date()：日付データの作成  
+* make_datetime() ：日時データの作成  
+```{r}
+flights %>% 
+  select(year, month, day, hour, minute) %>% 
+  mutate(departure = make_datetime(year, month, day, hour, minute))
+```
+
+
+* flightsの4つのカラムから日時データを作成する例：
+```{r}
+make_datetime_100 <- function(year, month, day, time) {
+  make_datetime(year, month, day, time %/% 100, time %% 100)
+}
+
+flights_dt <- flights %>% 
+  filter(!is.na(dep_time), !is.na(arr_time)) %>% 
+  mutate(
+    dep_time = make_datetime_100(year, month, day, dep_time),
+    arr_time = make_datetime_100(year, month, day, arr_time),
+    sched_dep_time = make_datetime_100(year, month, day, sched_dep_time),
+    sched_arr_time = make_datetime_100(year, month, day, sched_arr_time)
+  ) %>% 
+  select(origin, dest, ends_with("delay"), ends_with("time"))
+
+flights_dt
+```
+
+
+* 出発時刻の分布を表示（通年）：
+```{r}
+flights_dt %>% 
+  ggplot(aes(dep_time)) + 
+  geom_freqpoly(binwidth = 86400) # 86400 seconds = 1 day
+```
+
+
+* 出発時刻の分布を表示（ある1日のうちで）：
+```{r}
+flights_dt %>% 
+  filter(dep_time < ymd(20130102)) %>% 
+  ggplot(aes(dep_time)) + 
+  geom_freqpoly(binwidth = 600) # 600 s = 10 minutes
+```
+
+
+
+### From other types（データ型の変換）
+
+* as_datetime()：日時データに変換  
+* as_date()：日付データに変換  
+```{r}
+as_datetime(today())
+as_date(now())
+```
+
+
+“Unix Epoch”（1970-01-01）から数えた数値のデータの場合  
+* ```as_datetime()```：数値が秒の場合．  
+* ```as_date()```：数値が日の場合．
+```{r}
+as_datetime(60 * 60 * 10)
+as_date(365 * 10 + 2)
+```
+
+
+## Date-time components（日時の構成成分）
+
+### Getting components（日時の構成成分の抽出）
+
+* ```year()```：「年」を抽出  
+* ```month()```「月」を抽出  
+* ```mday()```：その月の中で何日目か(day of the month)  
+* ```yday()```：その年の中で何日目か(day of the year)  
+* ```wday()```：その週の中で何日目か(day of the week)  
+* ```hour()```：「時間」を抽出  
+* ```minute()```：「分」を抽出  
+* ```second()```：「秒」を抽出  
+
+```{r}
+datetime <- ymd_hms("2016-07-08 12:34:56")
+
+year(datetime)
+month(datetime)
+
+mday(datetime)
+yday(datetime)
+wday(datetime)
+```
+
+
+* ```label = TRUE```：```month()```では月名， ```wday()```では曜日名を示す．  
+* ```abbr = FALSE```： 月名/曜日名を略さずに示す．
+```{r}
+month(datetime, label = TRUE)
+wday(datetime, label = TRUE, abbr = FALSE)
+```
+
+
+* 曜日間でのフライト数を比較する例：
+```{r}
+flights_dt %>% 
+  mutate(wday = wday(dep_time, label = TRUE)) %>% 
+  ggplot(aes(x = wday)) +
+    geom_bar()
+```
+
+
+* 実際の出発時刻の「分」によって遅れ分数の平均値を比較する例：
+```{r}
+flights_dt %>% 
+  mutate(minute = minute(dep_time)) %>% 
+  group_by(minute) %>% 
+  summarise(
+    avg_delay = mean(arr_delay, na.rm = TRUE),
+    n = n()) %>% 
+  ggplot(aes(minute, avg_delay)) +
+    geom_line()
+```
+
+
+* 出発予定時刻の「分」の間で遅れの平均値を比較する例：
+```{r}
+sched_dep <- flights_dt %>% 
+  mutate(minute = minute(sched_dep_time)) %>% 
+  group_by(minute) %>% 
+  summarise(
+    avg_delay = mean(arr_delay, na.rm = TRUE),
+    n = n())
+
+ggplot(sched_dep, aes(minute, avg_delay)) +
+  geom_line()
+```
+
+データ発生の過程においてバイアスが生じる可能性があるので注意する．
+
+```{r}
+ggplot(sched_dep, aes(minute, n)) +
+  geom_line() # 出発時刻は，実際の時刻ではなく，最も近いキリのいい数字で記録される，ということらしい．
+```
+
+
+### Rounding（丸め）
+
+* ```floor_date()```: 指定した単位で切り捨て  
+* ```round_date()```: 指定した単位で四捨五入  
+* ```ceiling_date()```: 指定した単位で切り上げ  
+
+
+* 週当たりのフライト数を表示する例：
+```{r}
+flights_dt %>% 
+  count(week = floor_date(dep_time, "week")) %>% 
+  ggplot(aes(week, n)) +
+    geom_line()
+```
+
+
+### Setting components(日時の構成成分の値の設定)
+
+```{r}
+(datetime <- ymd_hms("2016-07-08 12:34:56"))
+
+year(datetime) <- 2020
+datetime
+
+month(datetime) <- 01
+datetime
+
+hour(datetime) <- hour(datetime) + 1
+datetime
+```
+
+* update(): 複数の成分を同時に変更できる．
+```{r}
+update(datetime, year = 2020, month = 2, mday = 2, hour = 2)
+```
+
+* 大きすぎる値を入力して繰り上げられた例：
+```{r}
+ymd("2015-02-01") %>% 
+  update(mday = 30)
+
+ymd("2015-02-01") %>% 
+  update(hour = 400)
+```
+
+* 日ごとのフライト数を図示する例：
+```{r}
+flights_dt %>% 
+  mutate(dep_hour = update(dep_time, yday = 1)) %>% 
+  ggplot(aes(dep_hour)) +
+    geom_freqpoly(binwidth = 300)
+```
+
+
+## Time spans（時間間隔を表現するデータ型）
+
+### Durations
+
+* 日付の差をとると，結果は「difftime」オブジェクトとして格納される．
+
+```{r}
+# How old is Hadley?
+h_age <- today() - ymd(19791014)
+h_age
+
+class(h_age)
+```
+
+「difftime」オブジェクトは，秒，分，時間，日，週の値をとる．  
+```lubridate```では```as.duration()```で秒の単位に変換できる（durationオブジェクト）．
+```{r}
+as.duration(h_age)
+```
+
+* durationオブジェクトに変換する他の関数：
+```{r}
+dseconds(15)
+dminutes(10)
+dhours(c(12, 24))
+ddays(0:5)
+dweeks(3)
+dyears(1)
+```
+
+durationオブジェクトは常に「秒」の単位で記録されている．  
+他の単位の表示は秒から変換することで実現している．
+
+* durationオブジェクトを用いた計算例：
+```{r}
+2 * dyears(1)
+dyears(1) + dweeks(12) + dhours(15)
+
+tomorrow <- today() + ddays(1)
+tomorrow
+
+last_year <- today() - dyears(1)
+last_year
+```
+
+* durationオブジェクトは正確な秒数として記録されるので，予期せぬ結果を招くこともある：
+```{r}
+one_pm <- ymd_hms("2016-03-12 13:00:00", tz = "America/New_York")
+
+one_pm
+one_pm + ddays(1)
+```
+→　タイムゾーンの問題．DSTでは3月12日は23時間しかないために起こった結果．
+
+
+### Periods
+
+上記の問題を解決するために「period」オブジェクトがある．  
+これにより，より自然な日時の計算ができる：
+```{r}
+one_pm
+one_pm + days(1)
+
+x <- days(1)
+class(x)
+```
+
+
+* periodオブジェクトを生成する関数：
+```{r}
+seconds(15)
+minutes(10)
+hours(c(12, 24))
+days(7)
+months(1:6)
+weeks(3)
+years(1)
+```
+
+* periodオブジェクトによる計算例：
+```{r}
+10 * (months(6) + days(1))
+days(50) + hours(25) + minutes(2)
+```
+
+* dateオブジェクトとperiodオブジェクトによる計算例．  
+durationオブジェクトより自然な計算ができる：
+```{r}
+# A leap year
+ymd("2016-01-01") + dyears(1)
+ymd("2016-01-01") + years(1)
+
+# Daylight Savings Time
+one_pm + ddays(1)
+one_pm + days(1)
+```
+
+* flights_dtにおける日時の不整合を修正する例  
+（出発時刻の前に目的地に到着している）：
+```{r}
+flights_dt %>% 
+  filter(arr_time < dep_time) 
+```
+
+→　これらはオーバーナイトで飛行しているが，時刻のみ考慮されており，日付がそのままになっているためである．  
+```days(1)```を足すことで修正する：
+```{r}
+flights_dt <- flights_dt %>% 
+  mutate(
+    overnight = arr_time < dep_time,
+    arr_time = arr_time + days(overnight * 1),
+    sched_arr_time = sched_arr_time + days(overnight * 1)
+  )
+```
+
+```{r}
+flights_dt %>% 
+  filter(overnight, arr_time < dep_time) 
+
+```
+
+
+### Intervals
+
+```{r}
+dyears(1) / ddays(365) # 正確な秒数同士の計算なので「1」を返す．
+```
+
+```{r}
+years(1) / days(1) # 1年が365日か366日か確定しないので，estimateとして返す．
+```
+
+* interval: 開始時点を持つduration
+```{r}
+next_year <- today() + years(1)
+x <- today() %--% next_year
+x / ddays(1)
+```
+
+xはintervalオブジェクトである：
+```{r}
+class(x)
+```
+
+* intervalの中にperiodがいくつ入るかを計算する例．  
+整数（integer）で割り算する必要がある：
+```{r}
+(today() %--% next_year) %/% days(1)
+```
+
+
+### Summary（可能な演算のまとめ）
+
+![ __* 異なるデータ型間で可能な演算の要約表__ ](./datetimes-arithmetic.png)
+
+
