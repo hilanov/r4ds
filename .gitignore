@@ -2,3 +2,6 @@
 .Rhistory
 .RData
 .Ruserdata
+Dates_and_times.Rmd
+datetimes-arithmetic.png
+Strings.Rmd
