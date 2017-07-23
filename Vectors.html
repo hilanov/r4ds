@@ -129,6 +129,12 @@ $(document).ready(function () {
 <li><a href="#important-types-of-atomic-vectoratmic-vector"><span class="toc-section-number">1.3</span> Important types of atomic vector（atmic vectorの重要な型）</a><ul>
 <li><a href="#logical"><span class="toc-section-number">1.3.1</span> Logical（論理型）</a></li>
 <li><a href="#numeric"><span class="toc-section-number">1.3.2</span> Numeric（数値型）</a></li>
+<li><a href="#character"><span class="toc-section-number">1.3.3</span> Character（文字型）</a></li>
+<li><a href="#missing-values"><span class="toc-section-number">1.3.4</span> Missing values（欠損値）</a></li>
+</ul></li>
+<li><a href="#using-atomic-vectorsatomic-vector"><span class="toc-section-number">1.4</span> Using atomic vectors（atomic vectorの使用）</a><ul>
+<li><a href="#coercion"><span class="toc-section-number">1.4.1</span> Coercion（強制、無理強い）</a></li>
+<li><a href="#test-functions"><span class="toc-section-number">1.4.2</span> Test functions（テストのための関数）</a></li>
 </ul></li>
 </ul></li>
 </ul>
@@ -219,11 +225,16 @@ pre { /* Code block - determines code spacing between lines */
 </div>
 <div id="important-types-of-atomic-vectoratmic-vector" class="section level2">
 <h2><span class="header-section-number">1.3</span> Important types of atomic vector（atmic vectorの重要な型）</h2>
-<p>4つの重要な型：<br />
-* logical（論理型）<br />
-* integer（整数型）<br />
-* double（倍精度浮動小数点型）<br />
-* character（文字型）</p>
+<p>4つの重要な型：</p>
+<ul>
+<li>logical（論理型）<br />
+</li>
+<li>integer（整数型）<br />
+</li>
+<li>double（倍精度浮動小数点型）<br />
+</li>
+<li>character（文字型）</li>
+</ul>
 <div id="logical" class="section level3">
 <h3><span class="header-section-number">1.3.1</span> Logical（論理型）</h3>
 <ul>
@@ -280,28 +291,28 @@ pre { /* Code block - determines code spacing between lines */
 </thead>
 <tbody>
 <tr class="odd">
-<td><code>is.finite()</code></td>
+<td>is.finite()</td>
 <td>X</td>
 <td></td>
 <td></td>
 <td></td>
 </tr>
 <tr class="even">
-<td><code>is.infinite()</code></td>
+<td>is.infinite()</td>
 <td></td>
 <td>X</td>
 <td></td>
 <td></td>
 </tr>
 <tr class="odd">
-<td><code>is.na()</code></td>
+<td>is.na()</td>
 <td></td>
 <td></td>
 <td>X</td>
 <td>X</td>
 </tr>
 <tr class="even">
-<td><code>is.nan()</code></td>
+<td>is.nan()</td>
 <td></td>
 <td></td>
 <td></td>
@@ -309,6 +320,340 @@ pre { /* Code block - determines code spacing between lines */
 </tr>
 </tbody>
 </table>
+</div>
+<div id="character" class="section level3">
+<h3><span class="header-section-number">1.3.3</span> Character（文字型）</h3>
+<p>Character（文字型）ベクトルは複雑な型である。なぜなら、characterベクトルのそれぞれの要素はstring（文字列）であり、stringは任意の量のデータを含むからである。</p>
+<p>Rではユニークな文字列は一度だけメモリに保存され、以降同じ文字列を使用する際はポインタで示される。このことによりメモリの使用量が軽減されている（文字列の使用メモリ量は<code>pryr::object_size()</code>で確認できる）。<br />
+以下の例でその挙動を見てみよう：</p>
+<pre class="r"><code>x &lt;- &quot;This is a reasonably long string.&quot;
+pryr::object_size(x)</code></pre>
+<pre><code>## 136 B</code></pre>
+<pre class="r"><code>y &lt;- rep(x, 1000) # xに入れた文字列を1000回繰り返す
+pryr::object_size(y)</code></pre>
+<pre><code>## 8.13 kB</code></pre>
+<p>yの使用メモリ量はxの1000倍もない。これはyの各要素が同じ文字列なので、ポインタで示される ためである。ポインタは8バイトなので、1000個のポインタと136バイトの文字列を合わせて8 * 1000 + 136 = 8.13 kBとなる。</p>
+</div>
+<div id="missing-values" class="section level3">
+<h3><span class="header-section-number">1.3.4</span> Missing values（欠損値）</h3>
+<p>Atomic vectorの各型にはそれぞれの欠損値がある：</p>
+<pre class="r"><code>NA            # logical</code></pre>
+<pre><code>## [1] NA</code></pre>
+<pre class="r"><code>NA_integer_   # integer</code></pre>
+<pre><code>## [1] NA</code></pre>
+<pre class="r"><code>NA_real_      # double</code></pre>
+<pre><code>## [1] NA</code></pre>
+<pre class="r"><code>NA_character_ # character</code></pre>
+<pre><code>## [1] NA</code></pre>
+<p>普段の使用では自動的に適切な型に変換されるため、これらを意識する必要はない。しかしいくつかの関数においては厳密な取り扱いが必要になることがあるため、これらの知識が必要となってくる。</p>
+</div>
+</div>
+<div id="using-atomic-vectorsatomic-vector" class="section level2">
+<h2><span class="header-section-number">1.4</span> Using atomic vectors（atomic vectorの使用）</h2>
+<div id="coercion" class="section level3">
+<h3><span class="header-section-number">1.4.1</span> Coercion（強制、無理強い）</h3>
+<ul>
+<li><p>明示的な変換：<code>as.logical()</code> <code>as.integer()</code> <code>as.double()</code> <code>as.character()</code>などを使用した変換</p></li>
+<li><p>暗黙の変換：<br />
+logical（論理型）ベクトルに対して数値を引数とする関数を適用する場合、<br />
+doubleベクトルに対して整数（integer）を引数とする関数を適用する場合、など。</p></li>
+<li><p>logical（論理型）ベクトルに対して数値を引数とする関数を適用する例。<br />
+<code>TRUE</code>=1, <code>FALSE</code>=0と変換される：</p></li>
+</ul>
+<pre class="r"><code>x &lt;- sample(20, 100, replace = TRUE)
+y &lt;- x &gt; 10
+sum(y)  # how many are greater than 10?</code></pre>
+<pre><code>## [1] 52</code></pre>
+<pre class="r"><code>mean(y) # what proportion are greater than 10?</code></pre>
+<pre><code>## [1] 0.52</code></pre>
+<ul>
+<li>integer（整数型）がlogical（論理型）に変換される例。<br />
+0=<code>FALSE</code>, 0以外=<code>TRUE</code>と変換される：</li>
+</ul>
+<pre class="r"><code>if (length(x)) {
+  # do something
+}</code></pre>
+<pre><code>## NULL</code></pre>
+<p>コードが見難くなるのでお勧めできない。この場合は<code>length(x) &gt; 0</code>とする方がよい。</p>
+<ul>
+<li><code>c()</code>で作成したベクトルの中に複数の型の値が入っている場合：</li>
+</ul>
+<pre class="r"><code>typeof(c(TRUE, 1L))</code></pre>
+<pre><code>## [1] &quot;integer&quot;</code></pre>
+<pre class="r"><code>typeof(c(1L, 1.5))</code></pre>
+<pre><code>## [1] &quot;double&quot;</code></pre>
+<pre class="r"><code>typeof(c(1.5, &quot;a&quot;))</code></pre>
+<pre><code>## [1] &quot;character&quot;</code></pre>
+<p>atomic vector の各要素に異なる型の値を持たせることはできない。<br />
+異なる型のデータを持たせる場合はlistを使う。</p>
+</div>
+<div id="test-functions" class="section level3">
+<h3><span class="header-section-number">1.4.2</span> Test functions（テストのための関数）</h3>
+<p>ベクトルの型の確認：</p>
+<ul>
+<li><code>typeof()</code>を使って確認する。<br />
+</li>
+<li>test function（戻り値は<code>TRUE</code>または<code>FALSE</code>）を使って確認する。<br />
+test functionの一覧表：</li>
+</ul>
+<table>
+<thead>
+<tr class="header">
+<th>Function</th>
+<th>lgl</th>
+<th>int</th>
+<th>dbl</th>
+<th>chr</th>
+<th>list</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>is_logical()</td>
+<td>x</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>is_integer()</td>
+<td></td>
+<td>x</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>is_double()</td>
+<td></td>
+<td></td>
+<td>x</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>is_numeric()</td>
+<td></td>
+<td>x</td>
+<td>x</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>is_character()</td>
+<td></td>
+<td></td>
+<td></td>
+<td>x</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>is_atomic()</td>
+<td>x</td>
+<td>x</td>
+<td>x</td>
+<td>x</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>is_list()</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>x</td>
+</tr>
+<tr class="even">
+<td>is_vector()</td>
+<td>x</td>
+<td>x</td>
+<td>x</td>
+<td>x</td>
+<td>x</td>
+</tr>
+</tbody>
+</table>
+<p>Each predicate also comes with a “scalar” version, like is_scalar_atomic(), which checks that the length is 1. This is useful, for example, if you want to check that an argument to your function is a single logical value.</p>
+<p>20.4.3 Scalars and recycling rules</p>
+<p>As well as implicitly coercing the types of vectors to be compatible, R will also implicitly coerce the length of vectors. This is called vector recycling, because the shorter vector is repeated, or recycled, to the same length as the longer vector.</p>
+<p>This is generally most useful when you are mixing vectors and “scalars”. I put scalars in quotes because R doesn’t actually have scalars: instead, a single number is a vector of length 1. Because there are no scalars, most built-in functions are vectorised, meaning that they will operate on a vector of numbers. That’s why, for example, this code works:</p>
+<p>sample(10) + 100 #&gt; [1] 109 108 104 102 103 110 106 107 105 101 runif(10) &gt; 0.5 #&gt; [1] TRUE TRUE FALSE TRUE TRUE TRUE FALSE TRUE TRUE TRUE</p>
+<p>In R, basic mathematical operations work with vectors. That means that you should never need to perform explicit iteration when performing simple mathematical computations.</p>
+<p>It’s intuitive what should happen if you add two vectors of the same length, or a vector and a “scalar”, but what happens if you add two vectors of different lengths?</p>
+<p>1:10 + 1:2 #&gt; [1] 2 4 4 6 6 8 8 10 10 12</p>
+<p>Here, R will expand the shortest vector to the same length as the longest, so called recycling. This is silent except when the length of the longer is not an integer multiple of the length of the shorter:</p>
+<p>1:10 + 1:3 #&gt; Warning in 1:10 + 1:3: longer object length is not a multiple of shorter #&gt; object length #&gt; [1] 2 4 6 5 7 9 8 10 12 11</p>
+<p>While vector recycling can be used to create very succinct, clever code, it can also silently conceal problems. For this reason, the vectorised functions in tidyverse will throw errors when you recycle anything other than a scalar. If you do want to recycle, you’ll need to do it yourself with rep():</p>
+<p>tibble(x = 1:4, y = 1:2) #&gt; Error: Variables must be length 1 or 4. #&gt; Problem variables: ‘y’</p>
+<p>tibble(x = 1:4, y = rep(1:2, 2)) #&gt; # A tibble: 4 × 2 #&gt; x y #&gt; <int> <int> #&gt; 1 1 1 #&gt; 2 2 2 #&gt; 3 3 1 #&gt; 4 4 2</p>
+<p>tibble(x = 1:4, y = rep(1:2, each = 2)) #&gt; # A tibble: 4 × 2 #&gt; x y #&gt; <int> <int> #&gt; 1 1 1 #&gt; 2 2 1 #&gt; 3 3 2 #&gt; 4 4 2</p>
+<p>20.4.4 Naming vectors</p>
+<p>All types of vectors can be named. You can name them during creation with c():</p>
+<p>c(x = 1, y = 2, z = 4) #&gt; x y z #&gt; 1 2 4</p>
+<p>Or after the fact with purrr::set_names():</p>
+<p>set_names(1:3, c(“a”, “b”, “c”)) #&gt; a b c #&gt; 1 2 3</p>
+<p>Named vectors are most useful for subsetting, described next. 20.4.5 Subsetting</p>
+<p>So far we’ve used dplyr::filter() to filter the rows in a tibble. filter() only works with tibble, so we’ll need new tool for vectors: [. [ is the subsetting function, and is called like x[a]. There are four types of things that you can subset a vector with:</p>
+<pre><code>A numeric vector containing only integers. The integers must either be all positive, all negative, or zero.
+
+Subsetting with positive integers keeps the elements at those positions:
+
+x &lt;- c(&quot;one&quot;, &quot;two&quot;, &quot;three&quot;, &quot;four&quot;, &quot;five&quot;)
+x[c(3, 2, 5)]
+#&gt; [1] &quot;three&quot; &quot;two&quot;   &quot;five&quot;
+
+By repeating a position, you can actually make a longer output than input:
+
+x[c(1, 1, 5, 5, 5, 2)]
+#&gt; [1] &quot;one&quot;  &quot;one&quot;  &quot;five&quot; &quot;five&quot; &quot;five&quot; &quot;two&quot;
+
+Negative values drop the elements at the specified positions:
+
+x[c(-1, -3, -5)]
+#&gt; [1] &quot;two&quot;  &quot;four&quot;
+
+It’s an error to mix positive and negative values:
+
+x[c(1, -1)]
+#&gt; Error in x[c(1, -1)]: only 0's may be mixed with negative subscripts
+
+The error message mentions subsetting with zero, which returns no values:
+
+x[0]
+#&gt; character(0)
+
+This is not useful very often, but it can be helpful if you want to create unusual data structures to test your functions with.
+
+Subsetting with a logical vector keeps all values corresponding to a TRUE value. This is most often useful in conjunction with the comparison functions.
+
+x &lt;- c(10, 3, NA, 5, 8, 1, NA)
+
+# All non-missing values of x
+x[!is.na(x)]
+#&gt; [1] 10  3  5  8  1
+
+# All even (or missing!) values of x
+x[x %% 2 == 0]
+#&gt; [1] 10 NA  8 NA
+
+If you have a named vector, you can subset it with a character vector:
+
+x &lt;- c(abc = 1, def = 2, xyz = 5)
+x[c(&quot;xyz&quot;, &quot;def&quot;)]
+#&gt; xyz def 
+#&gt;   5   2
+
+Like with positive integers, you can also use a character vector to duplicate individual entries.
+
+The simplest type of subsetting is nothing, x[], which returns the complete x. This is not useful for subsetting vectors, but it is useful when subsetting matrices (and other high dimensional structures) because it lets you select all the rows or all the columns, by leaving that index blank. For example, if x is 2d, x[1, ] selects the first row and all the columns, and x[, -1] selects all rows and all columns except the first.</code></pre>
+<p>To learn more about the applications of subsetting, reading the “Subsetting” chapter of Advanced R: <a href="http://adv-r.had.co.nz/Subsetting.html#applications" class="uri">http://adv-r.had.co.nz/Subsetting.html#applications</a>.</p>
+<p>There is an important variation of [ called [[. [[ only ever extracts a single element, and always drops names. It’s a good idea to use it whenever you want to make it clear that you’re extracting a single item, as in a for loop. The distinction between [ and [[ is most important for lists, as we’ll see shortly.</p>
+<p>20.5 Recursive vectors (lists)</p>
+<p>Lists are a step up in complexity from atomic vectors, because lists can contain other lists. This makes them suitable for representing hierarchical or tree-like structures. You create a list with list():</p>
+<p>x &lt;- list(1, 2, 3) x #&gt; [[1]] #&gt; [1] 1 #&gt; #&gt; [[2]] #&gt; [1] 2 #&gt; #&gt; [[3]] #&gt; [1] 3</p>
+<p>A very useful tool for working with lists is str() because it focusses on the structure, not the contents.</p>
+<p>str(x) #&gt; List of 3 #&gt; $ : num 1 #&gt; $ : num 2 #&gt; $ : num 3</p>
+<p>x_named &lt;- list(a = 1, b = 2, c = 3) str(x_named) #&gt; List of 3 #&gt; $ a: num 1 #&gt; $ b: num 2 #&gt; $ c: num 3</p>
+<p>Unlike atomic vectors, list() can contain a mix of objects:</p>
+<p>y &lt;- list(“a”, 1L, 1.5, TRUE) str(y) #&gt; List of 4 #&gt; $ : chr “a” #&gt; $ : int 1 #&gt; $ : num 1.5 #&gt; $ : logi TRUE</p>
+<p>Lists can even contain other lists!</p>
+<p>z &lt;- list(list(1, 2), list(3, 4)) str(z) #&gt; List of 2 #&gt; $ :List of 2 #&gt; ..$ : num 1 #&gt; ..$ : num 2 #&gt; $ :List of 2 #&gt; ..$ : num 3 #&gt; ..$ : num 4</p>
+<p>20.5.1 Visualising lists</p>
+<p>To explain more complicated list manipulation functions, it’s helpful to have a visual representation of lists. For example, take these three lists:</p>
+<p>x1 &lt;- list(c(1, 2), c(3, 4)) x2 &lt;- list(list(1, 2), list(3, 4)) x3 &lt;- list(1, list(2, list(3)))</p>
+<p>I’ll draw them as follows:</p>
+<p>There are three principles:</p>
+<pre><code>Lists have rounded corners. Atomic vectors have square corners.
+
+Children are drawn inside their parent, and have a slightly darker background to make it easier to see the hierarchy.
+
+The orientation of the children (i.e. rows or columns) isn’t important, so I’ll pick a row or column orientation to either save space or illustrate an important property in the example.</code></pre>
+<p>20.5.2 Subsetting</p>
+<p>There are three ways to subset a list, which I’ll illustrate with a list named a:</p>
+<p>a &lt;- list(a = 1:3, b = “a string”, c = pi, d = list(-1, -5))</p>
+<pre><code>[ extracts a sub-list. The result will always be a list.
+
+str(a[1:2])
+#&gt; List of 2
+#&gt;  $ a: int [1:3] 1 2 3
+#&gt;  $ b: chr &quot;a string&quot;
+str(a[4])
+#&gt; List of 1
+#&gt;  $ d:List of 2
+#&gt;   ..$ : num -1
+#&gt;   ..$ : num -5
+
+Like with vectors, you can subset with a logical, integer, or character vector.
+
+[[ extracts a single component from a list. It removes a level of hierarchy from the list.
+
+str(a[[1]])
+#&gt;  int [1:3] 1 2 3
+str(a[[4]])
+#&gt; List of 2
+#&gt;  $ : num -1
+#&gt;  $ : num -5
+
+$ is a shorthand for extracting named elements of a list. It works similarly to [[ except that you don’t need to use quotes.
+
+a$a
+#&gt; [1] 1 2 3
+a[[&quot;a&quot;]]
+#&gt; [1] 1 2 3</code></pre>
+<p>The distinction between [ and [[ is really important for lists, because [[ drills down into the list while [ returns a new, smaller list. Compare the code and output above with the visual representation in Figure 20.2. Subsetting a list, visually.</p>
+<p>Figure 20.2: Subsetting a list, visually. 20.5.3 Lists of condiments</p>
+<p>The difference between [ and [[ is very important, but it’s easy to get confused. To help you remember, let me show you an unusual pepper shaker.</p>
+<p>If this pepper shaker is your list x, then, x[1] is a pepper shaker containing a single pepper packet:</p>
+<p>x[2] would look the same, but would contain the second packet. x[1:2] would be a pepper shaker containing two pepper packets.</p>
+<p>x[[1]] is:</p>
+<p>If you wanted to get the content of the pepper package, you’d need x[[1]][[1]]:</p>
+<p>20.6 Attributes</p>
+<p>Any vector can contain arbitrary additional metadata through its attributes. You can think of attributes as named list of vectors that can be attached to any object. You can get and set individual attribute values with attr() or see them all at once with attributes().</p>
+<p>x &lt;- 1:10 attr(x, “greeting”) #&gt; NULL attr(x, “greeting”) &lt;- “Hi!” attr(x, “farewell”) &lt;- “Bye!” attributes(x) #&gt; $greeting #&gt; [1] “Hi!” #&gt; #&gt; $farewell #&gt; [1] “Bye!”</p>
+<p>There are three very important attributes that are used to implement fundamental parts of R:</p>
+<pre><code>Names are used to name the elements of a vector.
+Dimensions (dims, for short) make a vector behave like a matrix or array.
+Class is used to implement the S3 object oriented system.</code></pre>
+<p>You’ve seen names above, and we won’t cover dimensions because we don’t use matrices in this book. It remains to describe the class, which controls how generic functions work. Generic functions are key to object oriented programming in R, because they make functions behave differently for different classes of input. A detailed discussion of object oriented programming is beyond the scope of this book, but you can read more about it in Advanced R at <a href="http://adv-r.had.co.nz/OO-essentials.html#s3" class="uri">http://adv-r.had.co.nz/OO-essentials.html#s3</a>.</p>
+<p>Here’s what a typical generic function looks like:</p>
+<p>as.Date #&gt; function (x, …) #&gt; UseMethod(“as.Date”) #&gt; &lt;bytecode: 0x6b42288&gt; #&gt; &lt;environment: namespace:base&gt;</p>
+<p>The call to “UseMethod” means that this is a generic function, and it will call a specific method, a function, based on the class of the first argument. (All methods are functions; not all functions are methods). You can list all the methods for a generic with methods():</p>
+<p>methods(“as.Date”) #&gt; [1] as.Date.character as.Date.date as.Date.dates as.Date.default<br />
+#&gt; [5] as.Date.factor as.Date.numeric as.Date.POSIXct as.Date.POSIXlt<br />
+#&gt; see ‘?methods’ for accessing help and source code</p>
+<p>For example, if x is a character vector, as.Date() will call as.Date.character(); if it’s a factor, it’ll call as.Date.factor().</p>
+<p>You can see the specific implementation of a method with getS3method():</p>
+<p>getS3method(“as.Date”, “default”) #&gt; function (x, …) #&gt; { #&gt; if (inherits(x, “Date”)) #&gt; return(x) #&gt; if (is.logical(x) &amp;&amp; all(is.na(x))) #&gt; return(structure(as.numeric(x), class = “Date”)) #&gt; stop(gettextf(“do not know how to convert ‘%s’ to class %s”, #&gt; deparse(substitute(x)), dQuote(“Date”)), domain = NA) #&gt; } #&gt; &lt;bytecode: 0x573a678&gt; #&gt; &lt;environment: namespace:base&gt; getS3method(“as.Date”, “numeric”) #&gt; function (x, origin, …) #&gt; { #&gt; if (missing(origin)) #&gt; stop(“‘origin’ must be supplied”) #&gt; as.Date(origin, …) + x #&gt; } #&gt; &lt;bytecode: 0x573d6b8&gt; #&gt; &lt;environment: namespace:base&gt;</p>
+<p>The most important S3 generic is print(): it controls how the object is printed when you type its name at the console. Other important generics are the subsetting functions [, [[, and $. 20.7 Augmented vectors</p>
+<p>Atomic vectors and lists are the building blocks for other important vector types like factors and dates. I call these augmented vectors, because they are vectors with additional attributes, including class. Because augmented vectors have a class, they behave differently to the atomic vector on which they are built. In this book, we make use of four important augmented vectors:</p>
+<pre><code>Factors
+Dates
+Date-times
+Tibbles</code></pre>
+<p>These are described below. 20.7.1 Factors</p>
+<p>Factors are designed to represent categorical data that can take a fixed set of possible values. Factors are built on top of integers, and have a levels attribute:</p>
+<p>x &lt;- factor(c(“ab”, “cd”, “ab”), levels = c(“ab”, “cd”, “ef”)) typeof(x) #&gt; [1] “integer” attributes(x) #&gt; $levels #&gt; [1] “ab” “cd” “ef” #&gt; #&gt; $class #&gt; [1] “factor”</p>
+<p>20.7.2 Dates and date-times</p>
+<p>Dates in R are numeric vectors that represent the number of days since 1 January 1970.</p>
+<p>x &lt;- as.Date(“1971-01-01”) unclass(x) #&gt; [1] 365</p>
+<p>typeof(x) #&gt; [1] “double” attributes(x) #&gt; $class #&gt; [1] “Date”</p>
+<p>Date-times are numeric vectors with class POSIXct that represent the number of seconds since 1 January 1970. (In case you were wondering, “POSIXct” stands for “Portable Operating System Interface”, calendar time.)</p>
+<p>x &lt;- lubridate::ymd_hm(“1970-01-01 01:00”) unclass(x) #&gt; [1] 3600 #&gt; attr(,“tzone”) #&gt; [1] “UTC”</p>
+<p>typeof(x) #&gt; [1] “double” attributes(x) #&gt; $tzone #&gt; [1] “UTC” #&gt; #&gt; $class #&gt; [1] “POSIXct” “POSIXt”</p>
+<p>The tzone attribute is optional. It controls how the time is printed, not what absolute time it refers to.</p>
+<p>attr(x, “tzone”) &lt;- “US/Pacific” x #&gt; [1] “1969-12-31 17:00:00 PST”</p>
+<p>attr(x, “tzone”) &lt;- “US/Eastern” x #&gt; [1] “1969-12-31 20:00:00 EST”</p>
+<p>There is another type of date-times called POSIXlt. These are built on top of named lists:</p>
+<p>y &lt;- as.POSIXlt(x) typeof(y) #&gt; [1] “list” attributes(y) #&gt; $names #&gt; [1] “sec” “min” “hour” “mday” “mon” “year” “wday”<br />
+#&gt; [8] “yday” “isdst” “zone” “gmtoff” #&gt; #&gt; $class #&gt; [1] “POSIXlt” “POSIXt” #&gt; #&gt; $tzone #&gt; [1] “US/Eastern” “EST” “EDT”</p>
+<p>POSIXlts are rare inside the tidyverse. They do crop up in base R, because they are needed to extract specific components of a date, like the year or month. Since lubridate provides helpers for you to do this instead, you don’t need them. POSIXct’s are always easier to work with, so if you find you have a POSIXlt, you should always convert it to a regular data time lubridate::as_date_time(). 20.7.3 Tibbles</p>
+<p>Tibbles are augmented lists: they have class “tbl_df” + “tbl” + “data.frame”, and names (column) and row.names attributes:</p>
+<p>tb &lt;- tibble::tibble(x = 1:5, y = 5:1) typeof(tb) #&gt; [1] “list” attributes(tb) #&gt; $names #&gt; [1] “x” “y” #&gt; #&gt; $class #&gt; [1] “tbl_df” “tbl” “data.frame” #&gt; #&gt; $row.names #&gt; [1] 1 2 3 4 5</p>
+<p>The difference between a tibble and a list is that all the elements of a data frame must be vectors with the same length. All functions that work with tibbles enforce this constraint.</p>
+<p>Traditional data.frames have a very similar structure:</p>
+<p>df &lt;- data.frame(x = 1:5, y = 5:1) typeof(df) #&gt; [1] “list” attributes(df) #&gt; $names #&gt; [1] “x” “y” #&gt; #&gt; $row.names #&gt; [1] 1 2 3 4 5 #&gt; #&gt; $class #&gt; [1] “data.frame”</p>
+<p>The main difference is the class. The class of tibble includes “data.frame” which means tibbles inherit the regular data frame behaviour by default.</p>
 </div>
 </div>
 </div>
