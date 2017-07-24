@@ -496,6 +496,7 @@ methods("as.Date")
 ```
 
 例：```x```が・・・  
+
 * 文字列ベクトルのとき：```as.Date()```は```as.Date.character()```を呼び出す．  
 * ファクターベクトルのとき：```as.Date()```は```as.Date.factor()```を呼び出す．  
 
@@ -525,7 +526,7 @@ getS3method("as.Date", "numeric")
 ### Factors
 
 * Factors：カテゴリーデータを表すためのベクトル．  
-整数の上の構築される．  
+整数の上に構築される．  
 "levels"（レベル）の属性を持つ：
 ```{r}
 x <- factor(c("ab", "cd", "ab"), levels = c("ab", "cd", "ef"))
