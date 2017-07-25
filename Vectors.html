@@ -378,9 +378,9 @@ doubleベクトルに対して整数（integer）を引数とする関数を適�
 <pre class="r"><code>x &lt;- sample(20, 100, replace = TRUE)
 y &lt;- x &gt; 10
 sum(y)  # how many are greater than 10?</code></pre>
-<pre><code>## [1] 53</code></pre>
+<pre><code>## [1] 52</code></pre>
 <pre class="r"><code>mean(y) # what proportion are greater than 10?</code></pre>
-<pre><code>## [1] 0.53</code></pre>
+<pre><code>## [1] 0.52</code></pre>
 <ul>
 <li>integer（整数型）がlogical（論理型）に変換される例。<br />
 0=<code>FALSE</code>, 0以外=<code>TRUE</code>と変換される：</li>
@@ -496,9 +496,9 @@ test functionの一覧表：</li>
 長さの異なるベクトル間の演算においては、短い方のベクトルにおいて要素の再利用が行われ、ベクトルの長さを合わせてから演算が実行される。<br />
 ベクトルと「スカラー」（Rでは長さ1のベクトル）を混ぜるときに有用。</p>
 <pre class="r"><code>sample(10) + 100 # スカラーである100が長さ10のベクトルに変換される。</code></pre>
-<pre><code>##  [1] 101 110 109 102 106 107 108 105 104 103</code></pre>
+<pre><code>##  [1] 101 107 110 108 102 103 106 109 104 105</code></pre>
 <pre class="r"><code>runif(10) &gt; 0.5 # スカラーである0.5が長さ10のベクトルに変換される。</code></pre>
-<pre><code>##  [1]  TRUE FALSE  TRUE FALSE  TRUE  TRUE  TRUE FALSE FALSE FALSE</code></pre>
+<pre><code>##  [1] FALSE  TRUE  TRUE FALSE  TRUE  TRUE  TRUE FALSE  TRUE  TRUE</code></pre>
 <p>長さの異なるベクトルを足した場合の挙動：</p>
 <pre class="r"><code>1:10 + 1:2</code></pre>
 <pre><code>##  [1]  2  4  4  6  6  8  8 10 10 12</code></pre>
@@ -744,7 +744,7 @@ attributes(x) # xの属性の一覧を表示</code></pre>
 <pre class="r"><code>as.Date</code></pre>
 <pre><code>## function (x, ...) 
 ## UseMethod(&quot;as.Date&quot;)
-## &lt;bytecode: 0x000000000c368d80&gt;
+## &lt;bytecode: 0x000000000b2baeb0&gt;
 ## &lt;environment: namespace:base&gt;</code></pre>
 <ul>
 <li><p>“UseMethod”：これがジェネリック関数であり，第一引数のクラスに応じてある特定のメソッド（関数）を呼び出すことを意味する（すべてのメソッドは関数であるが，すべての関数がメソッドというわけではない）．</p></li>
@@ -771,7 +771,7 @@ attributes(x) # xの属性の一覧を表示</code></pre>
 ##     stop(gettextf(&quot;do not know how to convert '%s' to class %s&quot;, 
 ##         deparse(substitute(x)), dQuote(&quot;Date&quot;)), domain = NA)
 ## }
-## &lt;bytecode: 0x000000000c66c260&gt;
+## &lt;bytecode: 0x000000000afc4968&gt;
 ## &lt;environment: namespace:base&gt;</code></pre>
 <pre class="r"><code>getS3method(&quot;as.Date&quot;, &quot;numeric&quot;)</code></pre>
 <pre><code>## function (x, origin, ...) 
@@ -780,7 +780,7 @@ attributes(x) # xの属性の一覧を表示</code></pre>
 ##         stop(&quot;'origin' must be supplied&quot;)
 ##     as.Date(origin, ...) + x
 ## }
-## &lt;bytecode: 0x000000000c66e300&gt;
+## &lt;bytecode: 0x000000000afc28c8&gt;
 ## &lt;environment: namespace:base&gt;</code></pre>
 </div>
 <div id="augmented-vectors" class="section level2">
@@ -934,7 +934,7 @@ $(document).ready(function () {
   (function () {
     var script = document.createElement("script");
     script.type = "text/javascript";
-    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
     document.getElementsByTagName("head")[0].appendChild(script);
   })();
 </script>
